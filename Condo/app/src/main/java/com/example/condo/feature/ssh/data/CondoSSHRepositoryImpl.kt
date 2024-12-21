@@ -108,4 +108,18 @@ class CondoSSHRepositoryImpl(
             Result.Error(DataError.Network.SERVER_ERROR)
         }
     }
+
+    override suspend fun getCamera(siteId: String): Result<String, DataError.Network> =
+        withContext(Dispatchers.IO) {
+
+            val response = httpClient.get(urlString = "https://api.i-dsolution.com/camera") {
+                setBody(siteId)
+            }
+
+            if (response.status.isSuccess()) {
+                Result.Success(response.body<String>().toString())
+            } else {
+                Result.Error(DataError.Network.SERVER_ERROR)
+            }
+        }
 }

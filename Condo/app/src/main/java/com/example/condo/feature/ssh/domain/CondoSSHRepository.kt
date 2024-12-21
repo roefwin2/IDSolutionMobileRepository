@@ -10,4 +10,5 @@ interface CondoSSHRepository {
     suspend fun startTunnel(hostname :String,localPort :Int,username:String,password :String,siteName:String): EmptyDataResult<DataError.Network>
     suspend fun submitLogin(username:String,password :String,siteName:String): EmptyDataResult<DataError.Network>
     suspend fun unlockDoor(lobbyDoor : Int,siteName: String): Result<String, DataError.Network>
+    suspend fun getCamera(siteId: String): Result<String, DataError.Network>
 }
