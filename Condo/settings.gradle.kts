@@ -21,9 +21,7 @@ dependencyResolutionManagement {
         maven {
             url = URI.create("https://linphone.org/maven_repository")
         }
-        maven {
-            url = URI.create("https://raw.githubusercontent.com/alexgreench/google-webrtc/master")
-        }
+        maven { url = URI.create("https://raw.githubusercontent.com/alexgreench/google-webrtc/master") }
     }
 }
 

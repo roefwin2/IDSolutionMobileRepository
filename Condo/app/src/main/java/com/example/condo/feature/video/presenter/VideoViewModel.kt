@@ -30,7 +30,7 @@ class VideoViewModel : ViewModel(), WebSocketSignaling.SignalingListener {
     private var surfaceViewRenderer: SurfaceViewRenderer? = null
 
     // URL du serveur de signalisation
-    val signalingServerUrl = "wss://your.signaling.server"
+    val signalingServerUrl = "ws://192.168.1.107:8080/rtc"
 
     // Initialiser le WebSocketSignaling
     private  val webSocketSignaling = WebSocketSignaling(signalingServerUrl, this)

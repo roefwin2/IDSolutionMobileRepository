@@ -35,9 +35,9 @@ class ICondoLinphoneImpl(context: Context) : ICondoVoip {
 
         core.enableLogCollection(LogCollectionState.Enabled)
         login(
-            "5144710667",
-            "BA5C9E543D6BD0F",
-            "Sip.phonepower.com",
+            "regis_test",
+            "e1d2o3U4",
+            "sip.linphone.org",
             TransportType.Udp
         )
     }
