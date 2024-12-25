@@ -11,7 +11,7 @@ val appModule = module {
     single<SharedPreferences> {
         EncryptedSharedPreferences(
             androidContext(),
-            "auth pref",
+            "condo auth pref",
             MasterKey(androidApplication())
         )
     }
