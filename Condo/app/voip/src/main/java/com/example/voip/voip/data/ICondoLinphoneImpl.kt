@@ -25,24 +25,6 @@ class ICondoLinphoneImpl(context: Context) : ICondoVoip {
     private val _callState: MutableStateFlow<Call.State> = MutableStateFlow(Call.State.Idle)
     override val callState = _callState
 
-    init {
-        val factory = Factory.instance()
-        factory.setDebugMode(true, "Hello Linphone")
-        core = factory.createCore(null, null, context)
-
-        // If the following property is enabled, it will automatically configure created call params with video enabled
-        //core.videoActivationPolicy.automaticallyInitiate = true
-
-        core.enableLogCollection(LogCollectionState.Enabled)
-        login(
-            "5144710667",
-            "BA5C9E543D6BD0F",
-            "Sip.phonepower.com",
-            TransportType.Udp
-        )
-    }
-
-
     private val coreListener = object : CoreListenerStub() {
         override fun onAccountRegistrationStateChanged(
             core: Core,
@@ -68,6 +50,23 @@ class ICondoLinphoneImpl(context: Context) : ICondoVoip {
         }
     }
 
+    init {
+        val factory = Factory.instance()
+        factory.setDebugMode(true, "Hello Linphone")
+        core = factory.createCore(null, null, context)
+
+        // If the following property is enabled, it will automatically configure created call params with video enabled
+        //core.videoActivationPolicy.automaticallyInitiate = true
+
+        core.enableLogCollection(LogCollectionState.Enabled)
+        login(
+            "regis_test",
+            "e1d2o3U4",
+            "sip.linphone.org",
+            TransportType.Tls
+        )
+    }
+
     override fun initVideo(textureView: TextureView, captureTextureView: CaptureTextureView) {
         // For video to work, we need two TextureViews:
         // one for the remote video and one for the local preview
@@ -79,8 +78,8 @@ class ICondoLinphoneImpl(context: Context) : ICondoVoip {
         // Here we enable the video capture & display at Core level
         // It doesn't mean calls will be made with video automatically,
         // But it allows to use it later
-        core.enableVideoCapture(true)
-        core.enableVideoDisplay(true)
+        core.isVideoCaptureEnabled = true
+        core.isVideoDisplayEnabled = true
 
         // When enabling the video, the remote will either automatically answer the update request
         // or it will ask it's user depending on it's policy.
@@ -107,7 +106,7 @@ class ICondoLinphoneImpl(context: Context) : ICondoVoip {
         address?.password = password
         address?.transport = transportType
         params.serverAddress = address
-        params.registerEnabled = true
+        params.isRegisterEnabled = true
         val account = core.createAccount(params)
 
         core.addAuthInfo(authInfo)
@@ -163,7 +162,7 @@ class ICondoLinphoneImpl(context: Context) : ICondoVoip {
         // params is the object you configured when the call was started
         // remote params is the same but for the remote
         // current params is the real params of the call, resulting of the mix of local & remote params
-        params?.enableVideo(!call.currentParams.videoEnabled())
+        params?.isVideoEnabled = !call.currentParams.isVideoEnabled
         // Finally we request the call update
         call.update(params)
 

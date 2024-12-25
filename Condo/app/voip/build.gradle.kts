@@ -57,7 +57,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation("org.jetbrains.kotlin:kotlin-stdlib:2.0.0")
     // Latest version is 5.0.x, using + to get the latest available
-    implementation("org.linphone:linphone-sdk-android:5.0+")
+    implementation("org.linphone:linphone-sdk-android:5.4.+")
     // Adding this dependency allows the linphone-sdk to automatically handle audio focus
     implementation("androidx.media:media:1.2.0")
 
