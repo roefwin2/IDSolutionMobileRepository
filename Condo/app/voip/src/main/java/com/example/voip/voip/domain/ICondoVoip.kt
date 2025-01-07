@@ -14,6 +14,7 @@ interface ICondoVoip {
     fun outgoingCall(remoteSipUri : String)
 
     fun hangUp()
+    fun startKeepAliveService()
 
     fun toggleVideo()
     fun toggleCamera()

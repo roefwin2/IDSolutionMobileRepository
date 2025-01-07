@@ -94,6 +94,7 @@ class CallService() : CoreService() {
             action = CallService.ACTION_START_CALL_SERVICE
         }
 
+        // Create channel + notification => keep alive the service 
 // Créer le PendingIntent
         val pendingIntent = PendingIntent.getActivity(
             this,

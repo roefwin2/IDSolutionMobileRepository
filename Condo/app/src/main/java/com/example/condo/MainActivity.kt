@@ -1,15 +1,18 @@
 package com.example.condo
 
 import android.Manifest
+import android.app.NotificationManager
+import android.content.Context
 import android.content.pm.PackageManager
-import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.annotation.RequiresApi
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,10 +43,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
-import androidx.core.app.ServiceCompat.startForeground
+import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -55,55 +60,46 @@ import com.example.voip.voip.presenter.contacts.ContactsScreen
 
 
 class MainActivity : ComponentActivity() {
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // We will need the RECORD_AUDIO permission for video call
-        if (packageManager.checkPermission(Manifest.permission.RECORD_AUDIO, packageName) != PackageManager.PERMISSION_GRANTED) {
+        if (packageManager.checkPermission(
+                Manifest.permission.RECORD_AUDIO,
+                packageName
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
             requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 0)
         }
-        if (packageManager.checkPermission(Manifest.permission.POST_NOTIFICATIONS, packageName) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
-        }
-        checkLocationPermissionIsGiven()
         enableEdgeToEdge()
         setContent {
             CondoTheme {
                 val navController = rememberNavController()
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     NavigationRoot(
-                        navController = navController
+                        navController = navController,
+                        onIncomingCall = {
+                            showNotification(it)
+                        }
                     )
                 }
             }
         }
     }
 
-    private fun checkLocationPermissionIsGiven(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this, Manifest.permission.ACCESS_COARSE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this, Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        } else {
-            ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED &&
-                    ActivityCompat.checkSelfPermission(
-                        this,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                    ) == PackageManager.PERMISSION_GRANTED
-        }
+    private fun showNotification(title: String) {
+        val notification = NotificationCompat.Builder(applicationContext, "condo_channel_id")
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle(title)
+            .setContentText("This is a description")
+            .build()
+        val notificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(1, notification)
     }
 }
 
 @Composable
-fun MainScreen() {
+fun MainScreen(onIncomingCall: ((String) -> Unit)) {
     var selectedTab by remember { mutableStateOf(0) }
 
     Scaffold(
@@ -124,14 +120,16 @@ fun MainScreen() {
 
                     1 -> {
                         val navController = rememberNavController()
-                        NavHost(navController = navController, startDestination = "voip") {
+                        NavHost(navController = navController, startDestination = "calling") {
                             composable("voip") {
                                 ContactsScreen {
                                     navController.navigate("calling")
                                 }
                             }
                             composable("calling") {
-                                CallScreenRoot {
+                                CallScreenRoot(onIncomingCall = {
+                                    onIncomingCall.invoke(it)
+                                }) {
                                     navController.popBackStack()
                                 }
                             }
@@ -182,6 +180,24 @@ fun CustomTopAppBar(title: String) {
 
 @Composable
 fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
+    val context = LocalContext.current
+    var hasNotificationPermission by remember {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            mutableStateOf(
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+            )
+        } else {
+            mutableStateOf(true)
+        }
+    }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            hasNotificationPermission = isGranted
+        })
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.background,
         contentColor = MaterialTheme.colorScheme.onBackground
@@ -196,7 +212,12 @@ fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
             icon = { Icon(Icons.Filled.WifiCalling3, contentDescription = "Documents") },
             label = { Text("Calling") },
             selected = selectedTab == 1,
-            onClick = { onTabSelected(1) }
+            onClick = {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+                onTabSelected(1)
+            }
         )
         NavigationBarItem(
             icon = { Icon(Icons.Filled.Videocam, contentDescription = "Partager") },

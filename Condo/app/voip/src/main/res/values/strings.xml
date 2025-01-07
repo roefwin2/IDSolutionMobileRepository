@@ -1,3 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="notification_channel_service_id">1</string>
+    <string name="notification_channel_incoming_call_id">1</string>
+    <string name="notification_channel_incoming_call_name">Test</string>
 </resources>

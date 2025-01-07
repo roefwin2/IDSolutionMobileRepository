@@ -5,12 +5,19 @@ import androidx.compose.runtime.collectAsState
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun CallScreenRoot(callViewModel: CallViewModel = koinViewModel(), onEndCall: (() -> Unit)) {
+fun CallScreenRoot(
+    callViewModel: CallViewModel = koinViewModel(),
+    onIncomingCall: ((String) -> Unit),
+    onEndCall: (() -> Unit)
+) {
     val state = callViewModel.callState.collectAsState().value
 
     CallScreen(
         phoneNumber = "",
         call = state,
+        onIncomingCall = {
+            onIncomingCall.invoke(it)
+        },
         onEndCall = {
             onEndCall.invoke()
             callViewModel.hangUp()

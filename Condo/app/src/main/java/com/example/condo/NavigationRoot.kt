@@ -13,14 +13,15 @@ import com.example.condo.feature.auth.presentation.login.LoginScreenRoot
 @Composable
 fun NavigationRoot(
     navController: NavHostController,
+    onIncomingCall :((String) -> Unit),
     modifier: Modifier = Modifier
 ) {
     NavHost(modifier = modifier, navController = navController, startDestination = "auth") {
-        authGGraph(navController)
+        authGGraph(navController, onIncomingCall = { onIncomingCall.invoke(it) })
     }
 }
 
-private fun NavGraphBuilder.authGGraph(navController: NavHostController) {
+private fun NavGraphBuilder.authGGraph(navController: NavHostController,onIncomingCall: (String) -> Unit) {
     navigation(
         startDestination = "intro",
         route = "auth"
@@ -42,7 +43,9 @@ private fun NavGraphBuilder.authGGraph(navController: NavHostController) {
             )
         }
         composable("mainscreen") {
-            MainScreen()
+            MainScreen(onIncomingCall = {
+                onIncomingCall.invoke(it)
+            })
         }
     }
 }

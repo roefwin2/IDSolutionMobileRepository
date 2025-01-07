@@ -27,6 +27,27 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service
+            android:name="org.linphone.core.tools.service.CoreService"
+            android:foregroundServiceType="phoneCall|camera|microphone|location"
+            android:stopWithTask="false" />
+        <service
+            android:name="com.example.voip.voip.core.notification.CallService"
+            android:exported="false"
+            android:foregroundServiceType="phoneCall|camera|microphone"
+            android:stopWithTask="false"
+            android:label="callservice" />
+        <service
+            android:name="com.example.voip.voip.core.service.CoreKeepAliveThirdPartyAccountsService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            android:stopWithTask="false"
+            android:label="@string/app_name">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Needed to keep app alive to be able to receive messages and calls from third party SIP servers for which push notifications aren't available." />
+        </service>
+
     </application>
 
 </manifest>

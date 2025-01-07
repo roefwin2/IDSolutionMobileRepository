@@ -1,6 +1,5 @@
 package com.example.voip.voip.presenter.contacts
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement.SpaceBetween
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row

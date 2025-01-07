@@ -1,8 +1,11 @@
 package com.example.voip.voip.data
 
 import android.content.Context
+import android.content.Intent
 import android.view.TextureView
+import androidx.annotation.WorkerThread
 import androidx.lifecycle.MutableLiveData
+import com.example.voip.voip.core.notification.CallService
 import org.linphone.core.Account
 import org.linphone.core.Call
 import org.linphone.core.Core
@@ -15,15 +18,21 @@ import org.linphone.core.TransportType
 import org.linphone.mediastream.video.capture.CaptureTextureView
 import com.example.voip.voip.domain.ICondoVoip
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import org.linphone.core.AudioDevice
+import org.linphone.core.ConsolidatedPresence
+import org.linphone.core.GlobalState
+import org.linphone.core.tools.Log
 
-class ICondoLinphoneImpl(context: Context) : ICondoVoip {
+class ICondoLinphoneImpl(private val context: Context) : ICondoVoip {
+    private val TAG = "ICondoLinphoneImpl"
     private lateinit var core: Core
     private val _accountState: MutableLiveData<AccountState> = MutableLiveData()
     val accountState = _accountState
 
     private val _callState: MutableStateFlow<Call.State> = MutableStateFlow(Call.State.Idle)
-    override val callState = _callState
+    override val callState = _callState.asStateFlow()
 
     private val coreListener = object : CoreListenerStub() {
         override fun onAccountRegistrationStateChanged(
@@ -33,6 +42,19 @@ class ICondoLinphoneImpl(context: Context) : ICondoVoip {
             message: String
         ) {
             _accountState.postValue(AccountState(message = message, registrationState = state))
+            // Prevent this trigger when core is stopped/start in remote prov
+            if (core.globalState == GlobalState.Off) return
+            core.consolidatedPresence = ConsolidatedPresence.Online
+            Log.i(
+                "$TAG New account configured: [${account.params.identityAddress?.asStringUriOnly()}]"
+            )
+            if (!core.isPushNotificationAvailable || !account.params.isPushNotificationAvailable) {
+                startKeepAliveService()
+            } else {
+                Log.i(
+                    "$TAG Newly added account (or the whole Core) doesn't support push notifications but keep-alive foreground service is already enabled, nothing to do"
+                )
+            }
         }
 
         override fun onCallStateChanged(
@@ -48,6 +70,31 @@ class ICondoLinphoneImpl(context: Context) : ICondoVoip {
                 state ?: Call.State.Idle
             }
         }
+
+        override fun onAudioDeviceChanged(core: Core, audioDevice: AudioDevice) {
+            // This callback will be triggered when a successful audio device has been changed
+        }
+
+        override fun onAudioDevicesListUpdated(core: Core) {
+            // This callback will be triggered when the available devices list has changed,
+            // for example after a bluetooth headset has been connected/disconnected.
+        }
+
+        override fun onAccountAdded(core: Core, account: Account) {
+            // Prevent this trigger when core is stopped/start in remote prov
+            if (core.globalState == GlobalState.Off) return
+
+            Log.i(
+                "$TAG New account configured: [${account.params.identityAddress?.asStringUriOnly()}]"
+            )
+            if (!core.isPushNotificationAvailable || !account.params.isPushNotificationAvailable) {
+                startKeepAliveService()
+            } else {
+                Log.i(
+                    "$TAG Newly added account (or the whole Core) doesn't support push notifications but keep-alive foreground service is already enabled, nothing to do"
+                )
+            }
+        }
     }
 
     init {
@@ -57,7 +104,7 @@ class ICondoLinphoneImpl(context: Context) : ICondoVoip {
 
         // If the following property is enabled, it will automatically configure created call params with video enabled
         //core.videoActivationPolicy.automaticallyInitiate = true
-
+        core.isPushNotificationEnabled = true
         core.enableLogCollection(LogCollectionState.Enabled)
         login(
             "regis_test",
@@ -195,6 +242,30 @@ class ICondoLinphoneImpl(context: Context) : ICondoVoip {
             // Otherwise let's resume it
             call.resume()
         }
+    }
+
+   override fun startKeepAliveService() {
+        val serviceIntent = Intent(Intent.ACTION_MAIN).setClass(
+            context,
+            CallService::class.java
+        )
+        Log.i("$TAG Starting Keep alive for third party accounts Service")
+        try {
+            context.startService(serviceIntent)
+        } catch (e: Exception) {
+            Log.e("$TAG Failed to start keep alive service: $e")
+        }
+    }
+
+    fun stopKeepAliveService() {
+        val serviceIntent = Intent(Intent.ACTION_MAIN).setClass(
+            context,
+            CallService::class.java
+        )
+        Log.i(
+            "$TAG Stopping Keep alive for third party accounts Service"
+        )
+        context.stopService(serviceIntent)
     }
 }
 
