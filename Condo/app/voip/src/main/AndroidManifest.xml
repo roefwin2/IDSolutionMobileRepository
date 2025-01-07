@@ -3,7 +3,6 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Permissions pour le foregroundServiceType: camera -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
     <uses-permission android:name="android.permission.CAMERA"
         android:protectionLevel="normal"/>
     <uses-permission android:name="android.permission.SYSTEM_CAMERA"
@@ -11,13 +10,12 @@
         tools:ignore="ProtectedPermissions" />
 
     <!-- Permissions pour le foregroundServiceType: location -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"
-        android:minSdkVersion="34"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"
+        android:minSdkVersion="33"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <!-- Permissions pour le foregroundServiceType: microphone -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.CAPTURE_AUDIO_HOTWORD"
         android:protectionLevel="normal"
         tools:ignore="ProtectedPermissions" />
@@ -37,7 +35,6 @@
         android:protectionLevel="normal"/>
 
     <!-- Permissions pour le foregroundServiceType: phoneCall -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
     <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
 
     <application
@@ -52,6 +49,7 @@
             android:name="org.linphone.core.tools.service.CoreService"
             android:foregroundServiceType="phoneCall|camera|microphone|location"
             android:stopWithTask="false" />
-        </application>
+
+    </application>
 
 </manifest>
