@@ -1,17 +1,22 @@
 package com.example.voip.voip.core.notification
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.RingtoneManager
 import android.os.Build
 import android.os.IBinder
 import androidx.annotation.MainThread
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.TaskStackBuilder
@@ -29,6 +34,9 @@ class CallService() : CoreService() {
     private val notificationManager: NotificationManagerCompat by lazy {
         NotificationManagerCompat.from(this)
     }
+
+    val channelId = "high_priority_channel"
+    val channelName = "High Priority Notifications"
 
     companion object {
         const val ACTION_START_CALL_SERVICE = "com.example.condo.ACTION_START_CALL_SERVICE"
@@ -61,12 +69,60 @@ class CallService() : CoreService() {
         super.onDestroy()
     }
 
-    override fun createServiceNotification() {
-        // Do nothing, app's Notifications Manager will do the job
+    override fun createServiceNotificationChannel() {
+
+// Créez le canal de notification pour Android 8.0+ (API 26+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val importance = NotificationManager.IMPORTANCE_HIGH
+            val channel = NotificationChannel(channelId, channelName, importance)
+            val notificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        } else {
+            notificationManager.getNotificationChannel(channelId)
+        }
     }
 
     override fun showForegroundServiceNotification(isVideoCall: Boolean) {
-        // Do nothing, app's Notifications Manager will do the job
+        val intent = Intent(this, CallService::class.java).apply {
+            // Ajouter des données si nécessaire
+            action = CallService.ACTION_START_CALL_SERVICE
+        }
+
+        // Create channel + notification => keep alive the service
+        // Créer le PendingIntent
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            2, // Request code unique
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE // Définir des flags
+        )
+        val notification = createIncomingCallNotification(
+            context = this,
+            channelId = channelId,
+            callerName = "John Doe",
+            phoneNumber = "+33612345678",
+            acceptCallIntent = pendingIntent,
+            rejectCallIntent = pendingIntent
+        )
+
+        // Affichez la notification
+        val notificationManager = NotificationManagerCompat.from(this)
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return
+        }
+        notificationManager.notify(2, notification)
     }
 
     override fun hideForegroundServiceNotification() {
@@ -81,7 +137,20 @@ class CallService() : CoreService() {
         )
 
         val channelId = getString(R.string.notification_channel_service_id)
-        val channel = notificationManager.getNotificationChannel(channelId)
+        // Créez un canal de notification (Android 8.0+)
+        val channel = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel(
+                channelId,
+                "Foreground Service Channel", // Nom visible par l'utilisateur
+                NotificationManager.IMPORTANCE_HIGH // Importance minimale pour éviter les alertes
+            )
+        } else {
+            notificationManager.getNotificationChannel(channelId)
+        }
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        if (channel != null) {
+            notificationManager.createNotificationChannel(channel)
+        }
         val importance = channel?.importance ?: NotificationManagerCompat.IMPORTANCE_NONE
         if (importance == NotificationManagerCompat.IMPORTANCE_NONE) {
             Log.e(
@@ -94,35 +163,23 @@ class CallService() : CoreService() {
             action = CallService.ACTION_START_CALL_SERVICE
         }
 
-        // Create channel + notification => keep alive the service 
-// Créer le PendingIntent
+        // Create channel + notification => keep alive the service
+        // Créer le PendingIntent
         val pendingIntent = PendingIntent.getActivity(
             this,
             KEEP_ALIVE_FOR_THIRD_PARTY_ACCOUNTS_ID, // Request code unique
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE // Définir des flags
         )
-        // Créez un canal de notification (Android 8.0+)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                "Foreground Service Channel", // Nom visible par l'utilisateur
-                NotificationManager.IMPORTANCE_LOW // Importance minimale pour éviter les alertes
-            )
-            val notificationManager = getSystemService(NotificationManager::class.java)
-            notificationManager.createNotificationChannel(channel)
-        }
-        val builder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_launcher_background)
-            .setAutoCancel(false)
-            .setOngoing(true)
-            .setCategory(NotificationCompat.CATEGORY_SERVICE)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setShowWhen(false)
-            .setContentIntent(pendingIntent)
-        val notification = builder.build()
 
+        val notification = createIncomingCallNotification(
+            context = this,
+            channelId = "condo_channel_id",
+            callerName = "John Doe",
+            phoneNumber = "+33612345678",
+            acceptCallIntent = pendingIntent,
+            rejectCallIntent = pendingIntent
+        )
         Log.i(
             "$TAG Keep alive for third party accounts Service found, starting it as foreground using notification ID [$KEEP_ALIVE_FOR_THIRD_PARTY_ACCOUNTS_ID] with type [SPECIAL_USE]"
         )
@@ -130,6 +187,45 @@ class CallService() : CoreService() {
             KEEP_ALIVE_FOR_THIRD_PARTY_ACCOUNTS_ID,
             notification,
         )
+    }
+
+    private fun createIncomingCallNotification(
+        context: Context,
+        channelId: String,
+        callerName: String,
+        phoneNumber: String,
+        acceptCallIntent: PendingIntent,
+        rejectCallIntent: PendingIntent
+    ): Notification {
+
+        // Création des actions pour répondre/rejeter l'appel
+        val acceptAction = NotificationCompat.Action.Builder(
+            R.drawable.ic_call_accept,
+            context.getString(R.string.accept_call),
+            acceptCallIntent
+        ).build()
+
+        val rejectAction = NotificationCompat.Action.Builder(
+            R.drawable.ic_call_reject,
+            context.getString(R.string.reject_call),
+            rejectCallIntent
+        ).build()
+
+        // Configuration de la notification d'appel entrant
+        return NotificationCompat.Builder(context, channelId)
+            .setSmallIcon(R.drawable.ic_call_notification)
+            .setContentTitle(callerName)
+            .setContentText(phoneNumber)
+            //.setLargeIcon(getCallerAvatar(context, phoneNumber)) // Méthode à implémenter pour récupérer l'avatar
+            .setCategory(NotificationCompat.CATEGORY_CALL)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setPriority(NotificationCompat.PRIORITY_HIGH) // Priorité élevée
+            .setAutoCancel(true)
+            .setOngoing(true)
+            .addAction(acceptAction)
+            .addAction(rejectAction)
+            .setTimeoutAfter(60000) // Timeout après 1 minute
+            .build()
     }
 
     @MainThread

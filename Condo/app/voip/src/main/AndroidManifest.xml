@@ -5,6 +5,7 @@
     <!-- Permissions pour le foregroundServiceType: camera -->
     <uses-permission android:name="android.permission.CAMERA"
         android:protectionLevel="normal"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SYSTEM_CAMERA"
         android:protectionLevel="normal"
         tools:ignore="ProtectedPermissions" />
