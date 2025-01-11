@@ -6,7 +6,6 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -19,15 +18,11 @@ import androidx.annotation.MainThread
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.app.TaskStackBuilder
 import com.example.voip.R
-import com.example.voip.voip.core.service.CoreKeepAliveThirdPartyAccountsService
-import org.linphone.core.Core
+import com.example.voip.voip.domain.ICondoVoip
+import org.koin.android.ext.android.inject
 import org.linphone.core.tools.Log
 import org.linphone.core.tools.service.CoreService
-
-private const val INCOMING_CALL_ID = 1
-private const val KEEP_ALIVE_FOR_THIRD_PARTY_ACCOUNTS_ID = 5
 
 class CallService() : CoreService() {
     private val TAG = "CallService"
@@ -35,11 +30,15 @@ class CallService() : CoreService() {
         NotificationManagerCompat.from(this)
     }
 
-    val channelId = "high_priority_channel"
-    val channelName = "High Priority Notifications"
+    private val iCondoVoip : ICondoVoip by inject()
+    private val channelId = "high_priority_channel"
+    private val channelName = "High Priority Notifications"
 
     companion object {
         const val ACTION_START_CALL_SERVICE = "com.example.condo.ACTION_START_CALL_SERVICE"
+        const val ACTION_ANSWER_CALL = "action_answer_call"
+        const val ACTION_DECLINE_CALL = "action_decline_call"
+        const val KEEP_ALIVE_FOR_THIRD_PARTY_ACCOUNTS_ID = 5
     }
 
     override fun onCreate() {
@@ -52,8 +51,52 @@ class CallService() : CoreService() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        when (intent?.action) {
+            ACTION_START_CALL_SERVICE -> {
+                startKeepAliveServiceForeground()
+            }
+
+            ACTION_ANSWER_CALL -> {
+                val phoneNumber = intent.getStringExtra("phone_number")
+                handleAnswerCall(phoneNumber)
+            }
+
+            ACTION_DECLINE_CALL -> {
+                val phoneNumber = intent.getStringExtra("phone_number")
+                handleDeclineCall(phoneNumber)
+            }
+        }
         startKeepAliveServiceForeground()
         return START_STICKY
+    }
+
+    private fun handleAnswerCall(phoneNumber: String?) {
+        phoneNumber?.let {
+            // Implémentation de la réponse à l'appel
+            // Ceci dépendra de votre implémentation spécifique pour gérer les appels
+            // Par exemple:
+            // telephonyManager.answerRingingCall()
+            // ou votre propre logique de gestion d'appel
+            iCondoVoip.answerCall()
+        }
+        // Arrêter la notification une fois l'appel pris
+        stopForeground(true)
+    }
+
+    private fun handleDeclineCall(phoneNumber: String?) {
+        phoneNumber?.let {
+            // Implémentation pour décliner l'appel
+            // Par exemple:
+            // telephonyManager.endCall()
+            // ou votre propre logique de rejet d'appel
+
+            // Vous pourriez aussi vouloir envoyer un SMS automatique
+            // sendAutomaticSMS(phoneNumber)
+            iCondoVoip.hangUp()
+        }
+
+        // Arrêter la notification une fois l'appel rejeté
+        stopForeground(true)
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
@@ -84,26 +127,38 @@ class CallService() : CoreService() {
     }
 
     override fun showForegroundServiceNotification(isVideoCall: Boolean) {
-        val intent = Intent(this, CallService::class.java).apply {
-            // Ajouter des données si nécessaire
-            action = CallService.ACTION_START_CALL_SERVICE
+        // Intent pour répondre à l'appel
+        val answerIntent = Intent(this, CallService::class.java).apply {
+            action = ACTION_ANSWER_CALL
+            putExtra("phone_number", "+33612345678")
         }
 
-        // Create channel + notification => keep alive the service
-        // Créer le PendingIntent
-        val pendingIntent = PendingIntent.getActivity(
+        val answerPendingIntent = PendingIntent.getService(
             this,
-            2, // Request code unique
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE // Définir des flags
+            0,
+            answerIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // Intent pour décliner l'appel
+        val declineIntent = Intent(this, CallService::class.java).apply {
+            action = ACTION_DECLINE_CALL
+            putExtra("phone_number", "+33612345678")
+        }
+
+        val declinePendingIntent = PendingIntent.getService(
+            this,
+            1,  // Request code différent de celui pour répondre
+            declineIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         val notification = createIncomingCallNotification(
             context = this,
             channelId = channelId,
             callerName = "John Doe",
             phoneNumber = "+33612345678",
-            acceptCallIntent = pendingIntent,
-            rejectCallIntent = pendingIntent
+            acceptCallIntent = answerPendingIntent,
+            rejectCallIntent = declinePendingIntent
         )
 
         // Affichez la notification

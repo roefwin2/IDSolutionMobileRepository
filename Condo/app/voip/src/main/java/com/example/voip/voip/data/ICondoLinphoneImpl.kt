@@ -187,6 +187,17 @@ class ICondoLinphoneImpl(private val context: Context) : ICondoVoip {
         // Call process can be followed in onCallStateChanged callback from core listener
     }
 
+    override fun answerCall() {
+        if (core.callsNb == 0) return
+
+        // If the call state isn't paused, we can get it using core.currentCall
+        val call = if (core.currentCall != null) core.currentCall else core.calls[0]
+        call ?: return
+
+        // Terminating a call is quite simple
+        call.accept()
+    }
+
     override fun hangUp() {
         if (core.callsNb == 0) return
 
@@ -244,7 +255,7 @@ class ICondoLinphoneImpl(private val context: Context) : ICondoVoip {
         }
     }
 
-   override fun startKeepAliveService() {
+    override fun startKeepAliveService() {
         val serviceIntent = Intent(Intent.ACTION_MAIN).setClass(
             context,
             CallService::class.java

@@ -13,6 +13,7 @@ interface ICondoVoip {
     fun login(username: String,password: String,domain :String,transportType: TransportType)
     fun outgoingCall(remoteSipUri : String)
 
+    fun answerCall()
     fun hangUp()
     fun startKeepAliveService()
 
