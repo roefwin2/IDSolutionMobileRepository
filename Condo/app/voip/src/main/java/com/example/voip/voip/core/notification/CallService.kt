@@ -21,7 +21,12 @@ import androidx.core.app.NotificationManagerCompat
 import com.example.voip.R
 import com.example.voip.voip.domain.ICondoVoip
 import com.example.voip.voip.presenter.call.activities.CallingActivity
+import com.example.voip.voip.utils.isIncomingState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
+import org.linphone.core.Call
 import org.linphone.core.tools.Log
 import org.linphone.core.tools.service.CoreService
 
@@ -31,7 +36,7 @@ class CallService() : CoreService() {
         NotificationManagerCompat.from(this)
     }
 
-    private val iCondoVoip : ICondoVoip by inject()
+    private val iCondoVoip: ICondoVoip by inject()
     private val channelId = "high_priority_channel"
     private val channelName = "High Priority Notifications"
 
@@ -67,7 +72,6 @@ class CallService() : CoreService() {
                 handleDeclineCall(phoneNumber)
             }
         }
-        startKeepAliveServiceForeground()
         return START_STICKY
     }
 
@@ -128,30 +132,46 @@ class CallService() : CoreService() {
     }
 
     override fun showForegroundServiceNotification(isVideoCall: Boolean) {
-        // Intent pour répondre à l'appel
-        val answerIntent = Intent(this, CallingActivity::class.java).apply {
+        val callNotificationIntent = Intent(this, CallingActivity::class.java)
+        callNotificationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        CoroutineScope(Dispatchers.IO).launch {
+            iCondoVoip.callState.collect{ callState ->
+                when(callState){
+                    Call.State.IncomingReceived, Call.State.PushIncomingReceived,Call.State.IncomingEarlyMedia -> incomingState(callNotificationIntent)
+                    Call.State.OutgoingInit ,Call.State.OutgoingProgress,Call.State.OutgoingRinging ,Call.State.OutgoingEarlyMedia -> outgoingState(callNotificationIntent)
+                    else -> {
+                        Log.w(TAG,"No compatible state for $callState")
+                    }
+                }
+            }
+        }
+    }
+
+    private fun outgoingState(callNotificationIntent: Intent) {
+        callNotificationIntent.apply {
+            putExtra("OutgoingCall", true)
+        }
+        startActivity(callNotificationIntent)
+    }
+
+    private fun incomingState(callNotificationIntent: Intent) {
+        callNotificationIntent.apply {
+            putExtra("IncomingCall", true)
             action = ACTION_ANSWER_CALL
             putExtra("phone_number", "+33612345678")
             putExtra("answer", true)
         }
-
         val answerPendingIntent = PendingIntent.getActivity(
             this,
             0,
-            answerIntent,
+            callNotificationIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-
-        // Intent pour décliner l'appel
-        val declineIntent = Intent(this, CallingActivity::class.java).apply {
-            action = ACTION_DECLINE_CALL
-            putExtra("phone_number", "+33612345678")
-        }
 
         val declinePendingIntent = PendingIntent.getService(
             this,
             1,  // Request code différent de celui pour répondre
-            declineIntent,
+            callNotificationIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         val notification = createIncomingCallNotification(
@@ -228,7 +248,6 @@ class CallService() : CoreService() {
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE // Définir des flags
         )
-
         val notification = createIncomingCallNotification(
             context = this,
             channelId = "condo_channel_id",
