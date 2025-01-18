@@ -45,6 +45,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/TextAppearance.Compat.Notification">
+        <activity
+            android:name=".voip.presenter.call.activities.CallingActivity"
+            android:exported="true"
+            android:label="Calling"
+            android:theme="@style/Theme.AppCompat">
+        </activity>
 
         <service
             android:name="org.linphone.core.tools.service.CoreService"

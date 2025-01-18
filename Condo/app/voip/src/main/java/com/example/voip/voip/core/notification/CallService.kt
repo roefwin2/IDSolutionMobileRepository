@@ -20,6 +20,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.voip.R
 import com.example.voip.voip.domain.ICondoVoip
+import com.example.voip.voip.presenter.call.activities.CallingActivity
 import org.koin.android.ext.android.inject
 import org.linphone.core.tools.Log
 import org.linphone.core.tools.service.CoreService
@@ -128,12 +129,13 @@ class CallService() : CoreService() {
 
     override fun showForegroundServiceNotification(isVideoCall: Boolean) {
         // Intent pour répondre à l'appel
-        val answerIntent = Intent(this, CallService::class.java).apply {
+        val answerIntent = Intent(this, CallingActivity::class.java).apply {
             action = ACTION_ANSWER_CALL
             putExtra("phone_number", "+33612345678")
+            putExtra("answer", true)
         }
 
-        val answerPendingIntent = PendingIntent.getService(
+        val answerPendingIntent = PendingIntent.getActivity(
             this,
             0,
             answerIntent,
@@ -141,7 +143,7 @@ class CallService() : CoreService() {
         )
 
         // Intent pour décliner l'appel
-        val declineIntent = Intent(this, CallService::class.java).apply {
+        val declineIntent = Intent(this, CallingActivity::class.java).apply {
             action = ACTION_DECLINE_CALL
             putExtra("phone_number", "+33612345678")
         }
