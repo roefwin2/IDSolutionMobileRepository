@@ -258,7 +258,9 @@ class ICondoLinphoneImpl(private val context: Context) : ICondoVoip {
         val serviceIntent = Intent(Intent.ACTION_MAIN).setClass(
             context,
             CallService::class.java
-        )
+        ).apply {
+            action = CallService.ACTION_START_CALL_SERVICE
+        }
         Log.i("$TAG Starting Keep alive for third party accounts Service")
         try {
             context.startService(serviceIntent)

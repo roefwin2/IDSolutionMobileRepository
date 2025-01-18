@@ -1,4 +1,9 @@
 package com.example.voip.voip.utils
 
-class LinphoneUtils {
+import org.linphone.core.Call
+
+fun Call.State.isIncomingState() : Boolean{
+    return this == Call.State.IncomingReceived
+            || this == Call.State.PushIncomingReceived
+            || this == Call.State.IncomingEarlyMedia
 }
