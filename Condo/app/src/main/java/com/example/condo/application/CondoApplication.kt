@@ -8,6 +8,7 @@ import android.os.Build
 import com.example.condo.feature.auth.data.di.authDataModule
 import com.example.condo.feature.auth.presentation.di.authViewModelModule
 import com.example.condo.core.data.di.coreDataModule
+import com.example.condo.core.domain.di.coreDomainModule
 import com.example.condo.di.appModule
 import com.example.condo.feature.ssh.data.di.sshDataModule
 import com.example.condo.feature.ssh.domain.di.sshDomainModule
@@ -41,6 +42,7 @@ class CondoApplication : Application() {
                 appModule,
                 authDataModule,
                 coreDataModule,
+                coreDomainModule,
                 authViewModelModule,
                 sshDataModule,
                 sshDomainModule,
@@ -48,7 +50,7 @@ class CondoApplication : Application() {
                 voipViewModelModule,
                 voipDataModule,
                 videoViewModelModule,
-                coreModule
+                coreModule,
             )
         }
     }

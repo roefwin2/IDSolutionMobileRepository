@@ -17,7 +17,10 @@ import org.linphone.core.RegistrationState
 import org.linphone.core.TransportType
 import org.linphone.mediastream.video.capture.CaptureTextureView
 import com.example.voip.voip.domain.ICondoVoip
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import org.linphone.core.AudioDevice
@@ -28,8 +31,8 @@ import org.linphone.core.tools.Log
 class ICondoLinphoneImpl(private val context: Context) : ICondoVoip {
     private val TAG = "ICondoLinphoneImpl"
     private lateinit var core: Core
-    private val _accountState: MutableLiveData<AccountState> = MutableLiveData()
-    val accountState = _accountState
+    private val _accountState: MutableStateFlow<AccountState?> = MutableStateFlow<AccountState?>(null)
+    override val accountState = _accountState.asStateFlow()
 
     private val _callState: MutableStateFlow<Call.State> = MutableStateFlow(Call.State.Idle)
     override val callState = _callState.asStateFlow()
@@ -41,7 +44,9 @@ class ICondoLinphoneImpl(private val context: Context) : ICondoVoip {
             state: RegistrationState?,
             message: String
         ) {
-            _accountState.postValue(AccountState(message = message, registrationState = state))
+            _accountState.update {
+                AccountState(message = message, registrationState = state)
+            }
             // Prevent this trigger when core is stopped/start in remote prov
             if (core.globalState == GlobalState.Off) return
             core.consolidatedPresence = ConsolidatedPresence.Online
@@ -106,12 +111,6 @@ class ICondoLinphoneImpl(private val context: Context) : ICondoVoip {
         //core.videoActivationPolicy.automaticallyInitiate = true
         core.isPushNotificationEnabled = true
         core.enableLogCollection(LogCollectionState.Enabled)
-        login(
-            "regis_test",
-            "e1d2o3U4",
-            "sip.linphone.org",
-            TransportType.Tls
-        )
     }
 
     override fun initVideo(textureView: TextureView, captureTextureView: CaptureTextureView) {

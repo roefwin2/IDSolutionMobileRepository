@@ -10,18 +10,21 @@ import androidx.lifecycle.viewModelScope
 import com.example.condo.feature.auth.domain.AuthRepository
 import com.example.condo.core.data.networking.DataError
 import com.example.condo.core.data.networking.Result
+import com.example.condo.core.domain.usecases.ICondoLoginUseCase
 import com.example.condo.core.presentation.helper.UiText
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import org.linphone.core.TransportType
 
 @OptIn(
     ExperimentalFoundationApi::class
 )
 class LoginViewModel(
-    private val authRepository: AuthRepository
+    private val iCondoLoginUseCase: ICondoLoginUseCase
 ) : ViewModel() {
 
     var state by mutableStateOf(LoginState())
@@ -54,27 +57,31 @@ class LoginViewModel(
     private fun login() {
         viewModelScope.launch {
             state = state.copy(isLoggingIn = true)
-            val result = authRepository.login(
+            iCondoLoginUseCase.invoke(
                 email = state.email.text.toString().trim(),
-                password = state.password.text.toString()
-            )
-            state = state.copy(isLoggingIn = false)
-
-            when (result) {
-                is Result.Error -> {
-                    if (result.error == DataError.Network.UNAUTHORIZED) {
-                        eventChannel.send(
-                            LoginEvent.Error(
-                                UiText.DynamicString("Incorrect")
+                password = state.password.text.toString(),
+                voipUsername = "regis_test",
+                voiPassword = "e1d2o3U4",
+                domain = "sip.linphone.org",
+                transportType = TransportType.Tls
+            ).collectLatest { result ->
+                state = state.copy(isLoggingIn = false)
+                when (result) {
+                    is Result.Error -> {
+                        if (result.error == DataError.Network.UNAUTHORIZED) {
+                            eventChannel.send(
+                                LoginEvent.Error(
+                                    UiText.DynamicString("Incorrect")
+                                )
                             )
-                        )
-                    } else {
-                        eventChannel.send(LoginEvent.Error(UiText.DynamicString("Error")))
+                        } else {
+                            eventChannel.send(LoginEvent.Error(UiText.DynamicString("Error")))
+                        }
                     }
-                }
 
-                is Result.Success -> {
-                    eventChannel.send(LoginEvent.LoginSuccess)
+                    is Result.Success -> {
+                        eventChannel.send(LoginEvent.LoginSuccess)
+                    }
                 }
             }
         }

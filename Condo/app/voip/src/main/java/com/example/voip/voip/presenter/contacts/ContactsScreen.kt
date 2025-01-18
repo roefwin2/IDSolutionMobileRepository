@@ -33,7 +33,6 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun ContactsScreen(viewModel: ContactsViewModel = koinViewModel(), onCallClick: (String) -> Unit) {
     var phoneNumber by remember { mutableStateOf("") }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
