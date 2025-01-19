@@ -17,6 +17,7 @@ import org.linphone.core.RegistrationState
 import org.linphone.core.TransportType
 import org.linphone.mediastream.video.capture.CaptureTextureView
 import com.example.voip.voip.domain.ICondoVoip
+import com.example.voip.voip.domain.models.ICondoCall
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -34,7 +35,7 @@ class ICondoLinphoneImpl(private val context: Context) : ICondoVoip {
     private val _accountState: MutableStateFlow<AccountState?> = MutableStateFlow<AccountState?>(null)
     override val accountState = _accountState.asStateFlow()
 
-    private val _callState: MutableStateFlow<Call.State> = MutableStateFlow(Call.State.Idle)
+    private val _callState: MutableStateFlow<ICondoCall> = MutableStateFlow(ICondoCall())
     override val callState = _callState.asStateFlow()
 
     private val coreListener = object : CoreListenerStub() {
@@ -72,7 +73,9 @@ class ICondoLinphoneImpl(private val context: Context) : ICondoVoip {
             // which includes new incoming/outgoing calls
             println("LOGIN TEST  call state ${state?.name}/${call.params}")
             _callState.update {
-                state ?: Call.State.Idle
+                ICondoCall(
+                    call = call,
+                state = state ?: Call.State.Idle)
             }
         }
 

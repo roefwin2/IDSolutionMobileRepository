@@ -14,7 +14,7 @@ fun CallScreenRoot(
 
     CallScreen(
         phoneNumber = "",
-        call = state,
+        call = state.state,
         onIncomingCall = {
             onIncomingCall.invoke(it)
         },

@@ -4,6 +4,7 @@ import android.view.TextureView
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.voip.voip.domain.ICondoVoip
+import com.example.voip.voip.domain.models.ICondoCall
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import org.linphone.core.Call
@@ -16,7 +17,7 @@ class CallViewModel(
     val callState = voip.callState.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
-        Call.State.Idle
+        ICondoCall()
     )
 
     fun initVideo(textureView: TextureView, captureTextureView: CaptureTextureView) {
