@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -64,6 +65,9 @@ class CallingActivity : ComponentActivity() {
         }
     }
 
+    private val notificationManagerCompat by lazy {
+        NotificationManagerCompat.from(this)
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -71,7 +75,7 @@ class CallingActivity : ComponentActivity() {
         checkPermissions()
         // Récupérer les extras
         val answer = intent.getBooleanExtra("answer",true)
-
+        notificationManagerCompat.cancel(2)
         setContent {
             MaterialTheme {
                 val viewModel: VideoCallViewModel = koinViewModel()
@@ -128,7 +132,7 @@ class VideoCallViewModel(
         viewModelScope.launch {
             iCondoVoip.callState.collectLatest { state ->
                 _callState.update {
-                    it.copy(state = state)
+                    it.copy(state = state.state, isCallActive = state.state != Call.State.Released)
                 }
             }
         }

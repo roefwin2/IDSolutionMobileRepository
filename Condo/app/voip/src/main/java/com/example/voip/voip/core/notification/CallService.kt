@@ -15,13 +15,13 @@ import android.media.RingtoneManager
 import android.os.Build
 import android.os.IBinder
 import androidx.annotation.MainThread
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.voip.R
 import com.example.voip.voip.domain.ICondoVoip
 import com.example.voip.voip.presenter.call.activities.CallingActivity
-import com.example.voip.voip.utils.isIncomingState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -30,16 +30,24 @@ import org.linphone.core.Call
 import org.linphone.core.tools.Log
 import org.linphone.core.tools.service.CoreService
 
-class CallService() : CoreService() {
+class CallService : CoreService() {
     private val TAG = "CallService"
-    private val notificationManager: NotificationManagerCompat by lazy {
-        NotificationManagerCompat.from(this)
-    }
 
     private val iCondoVoip: ICondoVoip by inject()
     private val channelId = "high_priority_channel"
     private val channelName = "High Priority Notifications"
+    private val notificationId = 2
 
+    private val importance = NotificationManager.IMPORTANCE_HIGH
+    @RequiresApi(Build.VERSION_CODES.O)
+    private val channel =  NotificationChannel(channelId, channelName, importance)
+
+    private val notificationManagerCompat by lazy {
+        NotificationManagerCompat.from(this)
+    }
+    private val notificationManager: NotificationManager by lazy {
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    }
     companion object {
         const val ACTION_START_CALL_SERVICE = "com.example.condo.ACTION_START_CALL_SERVICE"
         const val ACTION_ANSWER_CALL = "action_answer_call"
@@ -73,6 +81,28 @@ class CallService() : CoreService() {
             }
         }
         return START_STICKY
+    }
+
+    private fun notifyNotification(notificationId: Int, notification: Notification) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            notificationManager.notify(notificationId,notification)
+        } else {
+            if (ActivityCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return
+            }
+            notificationManagerCompat.notify(notificationId,notification)
+        }
     }
 
     private fun handleAnswerCall(phoneNumber: String?) {
@@ -121,13 +151,9 @@ class CallService() : CoreService() {
 
 // Créez le canal de notification pour Android 8.0+ (API 26+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val importance = NotificationManager.IMPORTANCE_HIGH
-            val channel = NotificationChannel(channelId, channelName, importance)
-            val notificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         } else {
-            notificationManager.getNotificationChannel(channelId)
+            notificationManagerCompat.getNotificationChannel(channelId)
         }
     }
 
@@ -136,8 +162,8 @@ class CallService() : CoreService() {
         callNotificationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         CoroutineScope(Dispatchers.IO).launch {
             iCondoVoip.callState.collect{ callState ->
-                when(callState){
-                    Call.State.IncomingReceived, Call.State.PushIncomingReceived,Call.State.IncomingEarlyMedia -> incomingState(callNotificationIntent)
+                when(callState.state){
+                    Call.State.IncomingReceived, Call.State.PushIncomingReceived,Call.State.IncomingEarlyMedia -> incomingState(callState.call,callNotificationIntent)
                     Call.State.OutgoingInit ,Call.State.OutgoingProgress,Call.State.OutgoingRinging ,Call.State.OutgoingEarlyMedia -> outgoingState(callNotificationIntent)
                     else -> {
                         Log.w(TAG,"No compatible state for $callState")
@@ -150,11 +176,12 @@ class CallService() : CoreService() {
     private fun outgoingState(callNotificationIntent: Intent) {
         callNotificationIntent.apply {
             putExtra("OutgoingCall", true)
+            action = ACTION_DECLINE_CALL
         }
         startActivity(callNotificationIntent)
     }
 
-    private fun incomingState(callNotificationIntent: Intent) {
+    private fun incomingState(call: Call?,callNotificationIntent: Intent) {
         callNotificationIntent.apply {
             putExtra("IncomingCall", true)
             action = ACTION_ANSWER_CALL
@@ -177,29 +204,12 @@ class CallService() : CoreService() {
         val notification = createIncomingCallNotification(
             context = this,
             channelId = channelId,
-            callerName = "John Doe",
-            phoneNumber = "+33612345678",
+            callerName = call?.remoteAddress?.displayName ?: "Unknown name",
+            phoneNumber = call?.remoteAddress?.asStringUriOnly() ?: "Unknown number",
             acceptCallIntent = answerPendingIntent,
             rejectCallIntent = declinePendingIntent
         )
-
-        // Affichez la notification
-        val notificationManager = NotificationManagerCompat.from(this)
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return
-        }
-        notificationManager.notify(2, notification)
+        notifyNotification(notificationId, notification)
     }
 
     override fun hideForegroundServiceNotification() {
@@ -224,7 +234,6 @@ class CallService() : CoreService() {
         } else {
             notificationManager.getNotificationChannel(channelId)
         }
-        val notificationManager = getSystemService(NotificationManager::class.java)
         if (channel != null) {
             notificationManager.createNotificationChannel(channel)
         }
@@ -297,7 +306,7 @@ class CallService() : CoreService() {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setPriority(NotificationCompat.PRIORITY_HIGH) // Priorité élevée
             .setAutoCancel(true)
-            .setOngoing(true)
+            .setOngoing(false)
             .addAction(acceptAction)
             .addAction(rejectAction)
             .setTimeoutAfter(60000) // Timeout après 1 minute
