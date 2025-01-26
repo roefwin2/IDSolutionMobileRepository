@@ -5,4 +5,5 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.kotlin.jvm.ktor) apply false
+    alias(libs.plugins.kotlinMultiplatform).apply(false)
 }

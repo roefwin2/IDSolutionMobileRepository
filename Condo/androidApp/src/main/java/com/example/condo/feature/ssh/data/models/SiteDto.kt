@@ -1,7 +1,6 @@
 package com.example.condo.feature.ssh.data.models
 
 
-import com.example.condo.SiteLobbyDoors
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

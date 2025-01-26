@@ -68,6 +68,7 @@ androidx-foundation-layout-android = { group = "androidx.compose.foundation", na
 androidx-material3-android = { group = "androidx.compose.material3", name = "material3-android", version.ref = "material3Android" }
 ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling", version.ref = "uiTooling" }
 coil-base = { group = "io.coil-kt", name = "coil-base", version.ref = "coilBase" }
+voip = { module = "androidApp:voip" }
 
 
 [plugins]
@@ -77,4 +78,5 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kotlin-jvm-ktor = { id = "io.ktor.plugin", version = "3.0.0" }
+kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 

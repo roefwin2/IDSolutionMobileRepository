@@ -1,4 +1,4 @@
-package com.example.condo
+package com.example.condo.feature.ssh.data.models
 
 
 import kotlinx.serialization.SerialName

@@ -1,5 +1,8 @@
 import java.net.URI
 
+include(":voip")
+
+
 pluginManagement {
     repositories {
         google {
@@ -26,5 +29,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Condo"
-include(":app")
-include(":app:voip")
+include(":androidApp")
+include(":shared")

@@ -1,18 +1,11 @@
-package com.example.condo
+package com.example.condo.feature.mainscreen
 
 import android.Manifest
-import android.app.NotificationManager
-import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,57 +39,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.condo.feature.ssh.presenter.places.PlacesScreen
 import com.example.condo.feature.video.presenter.VideoScreen
-import com.example.condo.ui.theme.CondoTheme
 import com.example.voip.voip.presenter.call.CallScreenRoot
 import com.example.voip.voip.presenter.contacts.ContactsScreen
-
-
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        // We will need the RECORD_AUDIO permission for video call
-        if (packageManager.checkPermission(
-                Manifest.permission.RECORD_AUDIO,
-                packageName
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 0)
-        }
-        enableEdgeToEdge()
-        setContent {
-            CondoTheme {
-                val navController = rememberNavController()
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    NavigationRoot(
-                        navController = navController,
-                        onIncomingCall = {
-                            showNotification(it)
-                        }
-                    )
-                }
-            }
-        }
-    }
-
-    private fun showNotification(title: String) {
-        val notification = NotificationCompat.Builder(applicationContext, "condo_channel_id")
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle(title)
-            .setContentText("This is a description")
-            .build()
-        val notificationManager =
-            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(1, notification)
-    }
-}
 
 @Composable
 fun MainScreen(onIncomingCall: ((String) -> Unit)) {

@@ -1,4 +1,4 @@
-package com.example.condo
+package com.example.condo.feature.mainscreen
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier

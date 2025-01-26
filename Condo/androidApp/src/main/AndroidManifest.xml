@@ -51,7 +51,8 @@
             android:exported="false"
             android:foregroundServiceType="specialUse"
             android:stopWithTask="false"
-            android:label="@string/app_name">
+            android:label="@string/app_name"
+            tools:ignore="Instantiatable">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Needed to keep app alive to be able to receive messages and calls from third party SIP servers for which push notifications aren't available." />
