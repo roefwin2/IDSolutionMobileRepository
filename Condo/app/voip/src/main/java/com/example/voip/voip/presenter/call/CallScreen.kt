@@ -36,12 +36,14 @@ import androidx.compose.ui.unit.sp
 import com.example.voip.voip.presenter.TextureViewScreen
 import org.linphone.core.Call
 import org.linphone.core.Call.State
+import org.linphone.core.tools.service.CoreService
 import org.linphone.mediastream.video.capture.CaptureTextureView
 
 @Composable
 fun CallScreen(
     phoneNumber: String,
     call: Call.State,
+    onIncomingCall: ((String) -> Unit),
     onEndCall: () -> Unit,
     onInitVideo: ((TextureView, CaptureTextureView) -> Unit),
     onToggleCamera: (Boolean) -> Unit
@@ -115,6 +117,11 @@ fun CallScreen(
             }
         }
 
+        State.PushIncomingReceived,State.IncomingReceived,State.IncomingEarlyMedia -> {
+            onIncomingCall.invoke(call.name)
+        }
+
+
         State.Connected -> {
             TextureViewScreen(modifier = Modifier.background(Color.Gray),
                 onTextureAvailable = {
@@ -137,6 +144,7 @@ fun CallScreenPreview() {
     CallScreen(
         phoneNumber = "123 456 789",
         call = State.Idle,
+        onIncomingCall = {},
         onEndCall = { /* Preview action */ },
         onInitVideo = { _, _ ->
         },

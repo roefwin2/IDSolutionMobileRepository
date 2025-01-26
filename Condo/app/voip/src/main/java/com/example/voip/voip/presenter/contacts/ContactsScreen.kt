@@ -1,6 +1,5 @@
 package com.example.voip.voip.presenter.contacts
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement.SpaceBetween
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,7 +33,6 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun ContactsScreen(viewModel: ContactsViewModel = koinViewModel(), onCallClick: (String) -> Unit) {
     var phoneNumber by remember { mutableStateOf("") }
-
     Column(
         modifier = Modifier
             .fillMaxSize()

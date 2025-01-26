@@ -12,7 +12,7 @@ android {
     defaultConfig {
         applicationId = "com.example.condo"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 33
         versionCode = 1
         versionName = "1.0"
 
@@ -94,5 +94,9 @@ dependencies {
 
     //WebRTC
     implementation("org.webrtc:google-webrtc:1.0.+")
+
+    implementation(libs.linphone.sdk.android)
+    // Adding this dependency allows the linphone-sdk to automatically handle audio focus
+    implementation("androidx.media:media:1.2.0")
 
 }

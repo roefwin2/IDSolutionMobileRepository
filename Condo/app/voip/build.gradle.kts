@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 33
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -45,6 +45,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.coil.base)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -57,7 +58,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation("org.jetbrains.kotlin:kotlin-stdlib:2.0.0")
     // Latest version is 5.0.x, using + to get the latest available
-    implementation("org.linphone:linphone-sdk-android:5.4.+")
+    implementation(libs.linphone.sdk.android)
     // Adding this dependency allows the linphone-sdk to automatically handle audio focus
     implementation("androidx.media:media:1.2.0")
 

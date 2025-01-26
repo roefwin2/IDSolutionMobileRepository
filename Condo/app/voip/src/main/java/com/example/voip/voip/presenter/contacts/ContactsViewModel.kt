@@ -1,10 +1,7 @@
 package com.example.voip.voip.presenter.contacts
 
-import android.view.TextureView
 import androidx.lifecycle.ViewModel
 import com.example.voip.voip.domain.ICondoVoip
-import org.linphone.core.TransportType
-import org.linphone.mediastream.video.capture.CaptureTextureView
 
 data class Contact(
     val name: String,
