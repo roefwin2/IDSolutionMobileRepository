@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.CallMade
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -147,7 +148,7 @@ private fun IncomingState() {
 private fun OutgoingInitState() {
     StateContainer(
         backgroundColor = MaterialTheme.colorScheme.tertiaryContainer,
-        icon = Icons.Default.CallMade,
+        icon = Icons.AutoMirrored.Filled.CallMade,
         iconTint = MaterialTheme.colorScheme.tertiary,
         title = "Initialisation de l'appel",
         description = "Préparation de l'appel sortant"
