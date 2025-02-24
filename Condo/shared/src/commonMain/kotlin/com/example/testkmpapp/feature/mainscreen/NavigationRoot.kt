@@ -2,8 +2,6 @@ package com.example.testkmpapp.feature.mainscreen
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -16,10 +14,9 @@ import com.example.testkmpapp.feature.auth.presentation.login.LoginScreenRoot
 @Composable
 fun NavigationRoot(
     onIncomingCall: ((String) -> Unit),
-    modifier: Modifier = Modifier,
-    prefs : DataStore<Preferences>
+    modifier: Modifier = Modifier
 ) {
-    val navController =  rememberNavController()
+    val navController = rememberNavController()
     NavHost(modifier = modifier, navController = navController, startDestination = "auth") {
         authGGraph(navController, onIncomingCall = { onIncomingCall.invoke(it) })
     }

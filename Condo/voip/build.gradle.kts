@@ -51,11 +51,11 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
     // NavCompose
-    implementation(libs.androidx.navigation.compose)
     implementation("org.jetbrains.kotlin:kotlin-stdlib:2.0.0")
     // Latest version is 5.0.x, using + to get the latest available
     implementation(libs.linphone.sdk.android)

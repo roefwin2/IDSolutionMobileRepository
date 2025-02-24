@@ -35,7 +35,9 @@ import com.example.testkmpapp.core.presentation.helper.ObserveAsEvents
 import com.example.testkmpapp.theme.CondoTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.annotation.KoinExperimentalAPI
 
+@OptIn(KoinExperimentalAPI::class)
 @Composable
 fun LoginScreenRoot(
     onLoginSuccess: () -> Unit,

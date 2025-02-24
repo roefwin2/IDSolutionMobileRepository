@@ -24,10 +24,6 @@ class LoginViewModel(
     private val eventChannel = Channel<LoginEvent>()
     val events = eventChannel.receiveAsFlow()
 
-    init {
-
-    }
-
     fun onAction(action: LoginAction) {
         when (action) {
             LoginAction.OnLoginClick -> login()

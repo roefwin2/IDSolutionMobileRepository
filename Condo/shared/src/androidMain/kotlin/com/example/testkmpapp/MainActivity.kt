@@ -1,4 +1,4 @@
-package com.example.condo
+package com.example.testkmpapp
 
 import android.Manifest
 import android.app.NotificationManager
@@ -9,12 +9,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.core.app.NotificationCompat
-import androidx.navigation.compose.rememberNavController
-import com.example.condo.feature.mainscreen.NavigationRoot
-import com.example.condo.ui.theme.CondoTheme
+import com.example.testkmpapp.feature.mainscreen.NavigationRoot
+import com.example.testkmpapp.theme.CondoTheme
 
 
 class MainActivity : ComponentActivity() {
@@ -31,13 +31,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             CondoTheme {
-                val navController = rememberNavController()
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     NavigationRoot(
-                        navController = navController,
                         onIncomingCall = {
                             showNotification(it)
-                        }
+                        },
+                        modifier = Modifier.padding(innerPadding)
                     )
                 }
             }
@@ -46,7 +45,6 @@ class MainActivity : ComponentActivity() {
 
     private fun showNotification(title: String) {
         val notification = NotificationCompat.Builder(applicationContext, "condo_channel_id")
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle(title)
             .setContentText("This is a description")
             .build()

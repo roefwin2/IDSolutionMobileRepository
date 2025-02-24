@@ -22,20 +22,6 @@ fun GradientBackground(
     hasToolbar: Boolean = true,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val density = LocalDensity.current
-    val screenWidthPx = with(density) {
-        50.dp.roundToPx()
-    }
-
-    val smallDimension = minOf(
-        UInt.MIN_VALUE,
-        UInt.MIN_VALUE
-    )
-
-    val smallDimensionPx = with(density) {
-        smallDimension.toFloat()
-    }
-
     val primaryColor = MaterialTheme.colorScheme.primary
 
     //val isAtLeastAndroid12 = Build.VERSION.SDK_INT <= Build.VERSION_CODES.S
@@ -62,8 +48,6 @@ fun GradientBackground(
                             primaryColor,
                             MaterialTheme.colorScheme.background
                         ),
-                        center = Offset(x = screenWidthPx / 2f, y = -100f),
-                        radius = smallDimensionPx / 2f
                     )
                 ),
         )
