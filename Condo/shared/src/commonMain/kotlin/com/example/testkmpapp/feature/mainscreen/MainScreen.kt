@@ -62,7 +62,7 @@ fun MainScreen(onIncomingCall: ((String) -> Unit)) {
                         val navController = rememberNavController()
                         NavHost(navController = navController, startDestination = "voip") {
                             composable("voip") {
-                                Text("Contact screen")
+
                             }
                             composable("calling") {
                                 Text("Contact screen")
